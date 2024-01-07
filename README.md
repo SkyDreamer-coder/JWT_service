@@ -1,1 +1,1 @@
-# AuthServer
+# AuthServer jwt distributor project
