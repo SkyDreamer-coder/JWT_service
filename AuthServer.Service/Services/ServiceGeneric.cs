@@ -50,7 +50,7 @@ namespace AuthServer.Service.Services
         {
             var product = await _genericRepository.GetByIdAsync(id);
 
-            if(product == null)
+            if (product is null) 
             {  
                 return Response<TDto>.Fail("Id not found", 404, true);
             }
