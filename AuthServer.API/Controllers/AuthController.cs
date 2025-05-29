@@ -1,8 +1,6 @@
 ﻿using AuthServer.Core.Dtos;
 using AuthServer.Core.Services;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using SharedLibrary.Dtos;
 
 namespace AuthServer.API.Controllers
 {

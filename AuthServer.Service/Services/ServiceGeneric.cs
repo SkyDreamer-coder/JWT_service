@@ -1,15 +1,9 @@
-﻿using AuthServer.Core.Dtos;
-using AuthServer.Core.Repositories;
+﻿using AuthServer.Core.Repositories;
 using AuthServer.Core.Services;
 using AuthServer.Core.UnitOfWork;
 using Microsoft.EntityFrameworkCore;
 using SharedLibrary.Dtos;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AuthServer.Service.Services
 {
