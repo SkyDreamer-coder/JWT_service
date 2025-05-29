@@ -1,15 +1,16 @@
 using AuthServer.Core.Configuration;
-using Microsoft.EntityFrameworkCore;
+using AuthServer.Core.Models;
 using AuthServer.Core.Repositories;
 using AuthServer.Core.Services;
 using AuthServer.Core.UnitOfWork;
 using AuthServer.Data;
 using AuthServer.Data.Repositories;
 using AuthServer.Service.Services;
-using Microsoft.Extensions.Configuration;
-using SharedLibrary.Configurations;
-using AuthServer.Core.Models;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using SharedLibrary.Configurations;
+using SharedLibrary.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,14 +29,16 @@ builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepositor
 builder.Services.AddScoped(typeof(IServiceGeneric<,>), typeof(ServiceGeneric<,>));
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-/*builder.Services.AddDbContext<AppDbContext>(options =>
+// SqlServer DbContext
+builder.Services.AddDbContext<AppDbContext>(options =>
 {
-    options.UseSqlServer(Configuration.GetConnectionString("SqlServer"), sqlOptions =>
-                {
-                    sqlOptions.MigrationsAssembly("UdemyAuthServer.Data");
-                });
-});*/
+    options.UseSqlServer(builder.Configuration.GetConnectionString("SqlServer"), sqlOptions =>
+    {
+        sqlOptions.MigrationsAssembly("AuthServer.Data");
+    });              
+});
 
+// Identity membership modules
 builder.Services.AddIdentity<UserApp, IdentityRole>(Opt =>
 {
     Opt.User.RequireUniqueEmail = true;
@@ -46,6 +49,31 @@ builder.Services.AddIdentity<UserApp, IdentityRole>(Opt =>
 
 builder.Services.Configure<CustomTokenOption>(builder.Configuration.GetSection("TokenOption"));
 builder.Services.Configure<List<Client>>(builder.Configuration.GetSection("Clients"));
+
+// CustomTokenOptions mapping from appsettings
+var tokenOptions = builder.Configuration.GetSection("TokenOption").Get<CustomTokenOption>();
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+
+}).AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, opt =>
+{
+    opt.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters()
+    {
+        ValidIssuer = tokenOptions.Issuer,
+        ValidAudience = tokenOptions.Audience[0],
+        IssuerSigningKey = SignService.GetSymmetricSecurityKey(tokenOptions.SecurityKey),
+
+        ValidateIssuerSigningKey = true, // critical
+        ValidateAudience = true,
+        ValidateIssuer = true,
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero
+    };
+});
+
 
 var app = builder.Build();
 
